@@ -1,5 +1,7 @@
 FROM php:7.3.3-fpm-alpine3.9
 
+LABEL maintainer="soar <zhangxiang_php@vchangyi.com>"
+
 ENV php_conf /usr/local/etc/php-fpm.conf
 ENV fpm_conf /usr/local/etc/php-fpm.d/www.conf
 ENV php_vars /usr/local/etc/php/conf.d/docker-vars.ini
@@ -191,18 +193,39 @@ RUN echo @testing http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repo
     freetype-dev \
     sqlite-dev \
     libjpeg-turbo-dev \
-    postgresql-dev && \
+    g++ \
+    libtool \
+    pcre \
+    libevent \
+    libc-dev \
+    keyutils \
+    patch \
+    python3 \
+    python3-dev \
+    py3-pip \
+    postgresql-dev && \    
     docker-php-ext-configure gd \
       --with-gd \
       --with-freetype-dir=/usr/include/ \
       --with-png-dir=/usr/include/ \
       --with-jpeg-dir=/usr/include/ && \
+    pip3 install --upgrade pip && \
+    pip3 install XlsxWriter && \
+    pip3 install openpyxl && \
+    pip3 install xlrd && \
+    pip3 install xlwt && \
+    pip3 install urllib5 && \
     #curl iconv session
-    #docker-php-ext-install pdo_mysql pdo_sqlite mysqli mcrypt gd exif intl xsl json soap dom zip opcache && \
-    docker-php-ext-install iconv pdo_mysql pdo_sqlite pgsql pdo_pgsql mysqli gd exif intl xsl json soap dom zip opcache && \
+    #docker-php-ext-install pdo_mysql pdo_sqlite mysqli mcrypt gd exif intl xsl json soap dom zip opcache sockets
+    docker-php-ext-install iconv pdo_mysql pdo_sqlite pgsql pdo_pgsql mysqli gd exif intl xsl json soap dom zip opcache sockets && \
     pecl install xdebug-2.7.0RC1 && \
-    pecl install -o -f redis && \
+    pecl install -o -f mcrypt-1.0.2 && \
+    echo "extension=mcrypt.so" > /usr/local/etc/php/conf.d/mcrypt.ini && \
+    pecl install -o -f redis-4.3.0 && \
     echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini && \
+    pecl install swoole-4.3.1 && \
+    echo "extension=swoole.so" > /usr/local/etc/php/conf.d/swoole.ini && \
+    docker-php-ext-enable mcrypt redis swoole && \
     docker-php-source delete && \
     mkdir -p /etc/nginx && \
     mkdir -p /var/www/app && \
@@ -214,7 +237,7 @@ RUN echo @testing http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repo
     pip install -U pip && \
     pip install -U certbot && \
     mkdir -p /etc/letsencrypt/webrootauth && \
-    apk del gcc musl-dev linux-headers libffi-dev augeas-dev python-dev make autoconf
+    apk del gcc musl-dev linux-headers libffi-dev augeas-dev python-dev python3-dev make autoconf
 #    apk del .sys-deps
 #    ln -s /usr/bin/php7 /usr/bin/php
 
